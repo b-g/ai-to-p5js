@@ -10,7 +10,7 @@ function run(runFunc){
 	}
 }
 
-
+//Bezier only for two anchors
 function exportBezierVertexShapes(pageItems){
 	var p5CodeArr = [];
 	var count = 0;
