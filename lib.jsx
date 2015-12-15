@@ -10,33 +10,38 @@ function run(runFunc){
 	}
 }
 
-//Bezier more than two points
+//Bezier only for two anchors
 function exportBezierVertexShapes(pageItems){
 	var p5CodeArr = [];
+	var count = 0;
 	var p5Code="";
-	var i=0;
-		for (var k=1; k<pageItems[i].pathPoints.length; k+=1){
-
-			var point1 = pageItems[i].pathPoints[(k-1)];
-			var point2 = pageItems[i].pathPoints[k];
-			
-			for(var j=0;j<1;j++){
-				p5Code+="bezier(";	
-				var xy = [point1.anchor[0], point1.anchor[1]*-1];
-				var dirRight = [point1.rightDirection[0] ,point1.rightDirection[1]*-1];
+	for (var i=0; i < pageItems.length; i+=1) {
+		//p5Code.push('bezier(');
+		p5Code+="bezier(";
+		for (var k=0; k < pageItems[i].pathPoints.length; k+=1){
+			var point = pageItems[i].pathPoints[k];
+			if(count == 0){
+				var xy = [point.anchor[0], point.anchor[1]*-1];
+				var dirRight = [point.rightDirection[0] ,point.rightDirection[1]*-1];
 				xy = formatValues(xy);
 				dirRight = formatValues(dirRight);
 				p5Code+=xy.join(",")+","+dirRight.join(",")+",";
-				var xy2 = [point2.anchor[0], point2.anchor[1]*-1];
-				var dirLeft = [point2.leftDirection[0] ,point2.leftDirection[1]*-1];
-				xy2 = formatValues(xy2);
+				//p5Code.push(xy.join(',') + ',' + dirRight.join(','));
+				count = 1;
+			} else {
+				var xy = [point.anchor[0], point.anchor[1]*-1];
+				var dirLeft = [point.leftDirection[0] ,point.leftDirection[1]*-1];
+				xy = formatValues(xy);
 				dirLeft = formatValues(dirLeft);
-				p5Code+=dirLeft.join(",")+","+xy2.join(",");
-				p5Code+=");";
+				p5Code+=dirLeft.join(",")+","+xy.join(",");
+				//p5Code.push(dirLeft.join(',') + ',' + xy.join(','));
 			}
-			p5CodeArr.push(p5Code);
-			p5Code="";
-		}	
+		}
+		//p5Code.push(');');
+		p5Code+=");";
+	};
+	//alert(p5Code);
+	p5CodeArr.push(p5Code);
 	return p5CodeArr;
 }
 
