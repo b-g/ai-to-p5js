@@ -1,4 +1,5 @@
-#target illustrator
+﻿#target illustrator
+var comma = ', ';
 
 function run(runFunc){
 	if (app.activeDocument) { 
@@ -10,50 +11,181 @@ function run(runFunc){
 	}
 }
 
+function createFirstPoint(pageItems, i, k){
+	var point = pageItems[i].pathPoints[(k-1)];
+	var xy = [point.anchor[0], point.anchor[1]*-1];
+	return xy;
+}
+
+function createPoints(pageItems, i, k){
+	var point1 = pageItems[i].pathPoints[(k-1)];
+	var point2 = pageItems[i].pathPoints[k];
+	var dirRight = [point1.rightDirection[0] ,point1.rightDirection[1]*-1];
+	var dirLeft = [point2.leftDirection[0] ,point2.leftDirection[1]*-1];
+	var xy = [point2.anchor[0], point2.anchor[1]*-1];
+	return {
+		dirRight: dirRight,
+		dirLeft: dirLeft,
+		xy: xy
+	};
+}
+
+function endPoint (pageItems, i, k, anz) {
+	var old = k-anz
+	var point1 = pageItems[i].pathPoints[k];
+	var point2 = pageItems[i].pathPoints[old];
+	var dirRight = [point1.rightDirection[0] ,point1.rightDirection[1]*-1];
+	var dirLeft = [point2.leftDirection[0] ,point2.leftDirection[1]*-1];
+	var xy = [point2.anchor[0], point2.anchor[1]*-1];
+	return {
+		dirRight: dirRight,
+		dirLeft: dirLeft,
+		xy: xy
+	};
+}
+
+function isFill(pageItems, i, p5Code){
+	if (pageItems[i].filled == true){
+		var red = pageItems[i].fillColor.red;
+		var green = pageItems[i].fillColor.green;
+		var blue = pageItems[i].fillColor.blue;
+		var opacity = pageItems[i].opacity;
+		if(opacity == 100){
+			if (red == green && green == blue && blue == red){
+				if (red == 255 && green == 255 && blue == 255){
+				} else {
+				var gray = red;
+					p5Code.push('fill('+ gray +');');
+				}
+			} else {
+				p5Code.push('fill('+ red + comma + green + comma + blue +');');
+			}
+		} else {
+			if (red == green && green == blue && blue == red){
+				if (red == 255 && green == 255 && blue == 255){
+				} else {
+				var gray = red;
+					p5Code.push('fill('+ gray + comma + opacity +');');
+				}
+			} else {
+				p5Code.push('fill('+ red + comma + green + comma + blue + comma + opacity +');');
+			}
+		}
+	} else {
+		p5Code.push('noFill();');
+	}
+	return p5Code;
+}
+
+function hasStroke (pageItems, i, p5Code){
+	if (pageItems[i].stroked == true){
+		var sWidth = pageItems[i].strokeWidth;
+		var red = pageItems[i].strokeColor.red;
+		var green = pageItems[i].strokeColor.green;
+		var blue = pageItems[i].strokeColor.blue;
+		var opacity = pageItems[i].opacity;
+		if (sWidth == 1){
+		} else {
+			p5Code.push('strokeWeight(' + sWidth + ')');
+		}
+		if(opacity == 100){
+			if (red == green && green == blue && blue == red){
+				if (red == 0 && green == 0 && blue == 0){
+				} else {
+				var gray = red;
+					p5Code.push('stroke('+ gray +');');
+				}
+			} else {
+				p5Code.push('stroke('+ red + comma + green + comma + blue +');');
+			}
+		} else {
+			if (red == green && green == blue && blue == red){
+				if (red == 0 && green == 0 && blue == 0){
+				} else {
+				var gray = red;
+					p5Code.push('stroke('+ gray + comma + opacity +');');
+				}
+			} else {
+				p5Code.push('stroke('+ red + comma + green + comma + blue + comma + opacity +');');
+			}
+		}
+	} else {
+		p5Code.push('noStroke();');
+	}
+	return p5Code;
+}
+
+
 
 function exportBezierVertexShapes(pageItems){
-	var p5CodeArr = [];
-	var count = 0;
-	var p5Code="";
-	for (var i=0; i < pageItems.length; i+=1) {
-		//p5Code.push('bezier(');
-		p5Code+="bezier(";
-		for (var k=0; k < pageItems[i].pathPoints.length; k+=1){
-			var point = pageItems[i].pathPoints[k];
-			if(count == 0){
-				var xy = [point.anchor[0], point.anchor[1]*-1];
-				var dirRight = [point.rightDirection[0] ,point.rightDirection[1]*-1];
+	var p5Code = [];
+	for (var i=0; i < pageItems.length; i+=1){
+		var anz = 0;
+		hasStroke(pageItems, i, p5Code);
+		isFill(pageItems, i, p5Code);
+		p5Code.push('beginShape();');
+		for (var k=1; k<pageItems[i].pathPoints.length; k+=1){
+			if (k==1){
+				p5Code.push('vertex('+ formatValues(createFirstPoint(pageItems, i, k)).join(comma) +');');
+				var point = createPoints(pageItems, i, k);
+				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(comma) +comma + 
+					formatValues(point.dirLeft).join(comma) + comma + 
+					formatValues(point.xy).join(comma) + ');');
+				anz+=1;
+			} else {
+				var point = createPoints(pageItems, i, k);
+				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(comma) +comma + 
+					formatValues(point.dirLeft).join(comma) + comma + 
+					formatValues(point.xy).join(comma) + ');');
+				anz+=1;
+			}
+			if (pageItems[i].closed == true && anz == pageItems[i].pathPoints.length-1){
+				var point = endPoint(pageItems, i, k, anz);
+				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(comma) +comma + 
+				formatValues(point.dirLeft).join(comma) + comma + 
+				formatValues(point.xy).join(comma) + ');');	
+			}
+		}
+		p5Code.push('endShape();');
+	}
+	
+	/*var p5Code="";
+	var i=0;
+		for (var k=1; k<pageItems[i].pathPoints.length; k+=1){
+
+			var point1 = pageItems[i].pathPoints[(k-1)];
+			var point2 = pageItems[i].pathPoints[k];
+			
+			for(var j=0;j<1;j++){
+				p5Code+="bezier(";	
+				var xy = [point1.anchor[0], point1.anchor[1]*-1];
+				var dirRight = [point1.rightDirection[0] ,point1.rightDirection[1]*-1];
 				xy = formatValues(xy);
 				dirRight = formatValues(dirRight);
 				p5Code+=xy.join(",")+","+dirRight.join(",")+",";
-				//p5Code.push(xy.join(',') + ',' + dirRight.join(','));
-				count = 1;
-			} else {
-				var xy = [point.anchor[0], point.anchor[1]*-1];
-				var dirLeft = [point.leftDirection[0] ,point.leftDirection[1]*-1];
-				xy = formatValues(xy);
+				var xy2 = [point2.anchor[0], point2.anchor[1]*-1];
+				var dirLeft = [point2.leftDirection[0] ,point2.leftDirection[1]*-1];
+				xy2 = formatValues(xy2);
 				dirLeft = formatValues(dirLeft);
-				p5Code+=dirLeft.join(",")+","+xy.join(",");
-				//p5Code.push(dirLeft.join(',') + ',' + xy.join(','));
+				p5Code+=dirLeft.join(",")+","+xy2.join(",");
+				p5Code+=");";
 			}
-		}
-		//p5Code.push(');');
-		p5Code+=");";
-	};
-	//alert(p5Code);
-	p5CodeArr.push(p5Code);
-	return p5CodeArr;
+			p5CodeArr.push(p5Code);
+			p5Code="";
+		}	*/
+	return p5Code;
 }
 
 function exportVertexShapes(pageItems){
 	var p5Code = [];
 	for (var i=0; i < pageItems.length; i+=1) {
-		p5Code.push('beginShape();')+","+dirRight.join(",");
+		hasStroke(pageItems, i, p5Code);
+		p5Code.push('beginShape();');
 		for (var ii=0; ii < pageItems[i].pathPoints.length; ii+=1) {
 			var point = pageItems[i].pathPoints[ii];
 			var xy = [point.anchor[0], point.anchor[1]*-1];
 			xy = formatValues(xy);
-			p5Code.push('vertex('+ xy.join(',') +');');
+			p5Code.push('vertex('+ xy.join(comma) +');');
 		}
 		p5Code.push('endShape(CLOSE);');
 	}
@@ -65,6 +197,8 @@ function exportEllipses(pageItems){
 		'ellipseMode(CENTER);'
 	];
 	for (var i=0, len=pageItems.length; i < len; i+=1) {
+		hasStroke(pageItems, i, p5Code);
+		isFill(pageItems, i, p5Code);
 		pushMulti(p5Code, createEllipse(pageItems[i]));
 	}
 	return p5Code;
@@ -73,6 +207,8 @@ function exportEllipses(pageItems){
 function exportRects(pageItems){
 	var p5Code = [];
 	for (var i=0, len=pageItems.length; i < len; i+=1) {
+		hasStroke(pageItems, i, p5Code);
+		isFill(pageItems, i, p5Code);
 		pushMulti(p5Code, createRect(pageItems[i]));
 	}
 	return p5Code;
@@ -81,7 +217,7 @@ function exportRects(pageItems){
 function createRect(item){
 	var p5Code = getBounds(item);
 	p5Code = formatValues(p5Code);
-	return 'rect('+ p5Code.join(',') +');';
+	return 'rect('+ p5Code.join(comma) +');';
 }
 
 function createEllipse(item){
@@ -97,7 +233,7 @@ function createEllipse(item){
 		h
 	];
 	p5Code = formatValues(p5Code);
-	return 'ellipse('+ p5Code.join(',') +');';
+	return 'ellipse('+ p5Code.join(comma) +');';
 }
 
 function pushMulti(targetArray, arrayOrValue) {

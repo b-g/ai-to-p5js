@@ -1,1 +1,4 @@
-﻿#target illustrator#include ./lib.jsxrun(exportVertexShapes);
+﻿#target illustrator
+#include ./lib.jsx
+
+run(exportVertexShapes);

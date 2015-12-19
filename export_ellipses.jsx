@@ -1,1 +1,4 @@
-﻿#target illustrator#include ./lib.jsxrun(exportEllipses);
+﻿#target illustrator
+#include ./lib.jsx
+
+run(exportEllipses);

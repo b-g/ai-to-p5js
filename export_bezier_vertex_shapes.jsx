@@ -1,3 +1,4 @@
-#target illustrator 
-#include ./lib.jsx  
+#target illustrator
+#include ./lib.jsx
+
 run(exportBezierVertexShapes);

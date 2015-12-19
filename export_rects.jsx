@@ -1,1 +1,4 @@
-﻿#target illustrator#include ./lib.jsxrun(exportRects);
+﻿#target illustrator
+#include ./lib.jsx
+
+run(exportRects);
