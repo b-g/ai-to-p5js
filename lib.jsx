@@ -49,14 +49,27 @@ function isFill(pageItems, i, p5Code){
 		var red = pageItems[i].fillColor.red;
 		var green = pageItems[i].fillColor.green;
 		var blue = pageItems[i].fillColor.blue;
-		if (red == green && green == blue && blue == red){
-			if (red == 255 && green == 255 && blue == 255){			
+		var opacity = pageItems[i].opacity;
+		if(opacity == 100){
+			if (red == green && green == blue && blue == red){
+				if (red == 255 && green == 255 && blue == 255){
+				} else {
+				var gray = red;
+					p5Code.push('fill('+ gray +');');
+				}
 			} else {
-			var gray = red;
-				p5Code.push('fill('+ gray +');');
+				p5Code.push('fill('+ red + comma + green + comma + blue +');');
 			}
 		} else {
-			p5Code.push('fill('+ red + comma + green + comma + blue +');');
+			if (red == green && green == blue && blue == red){
+				if (red == 255 && green == 255 && blue == 255){
+				} else {
+				var gray = red;
+					p5Code.push('fill('+ gray + comma + opacity +');');
+				}
+			} else {
+				p5Code.push('fill('+ red + comma + green + comma + blue + comma + opacity +');');
+			}
 		}
 	} else {
 		p5Code.push('noFill();');
@@ -64,10 +77,51 @@ function isFill(pageItems, i, p5Code){
 	return p5Code;
 }
 
+function hasStroke (pageItems, i, p5Code){
+	if (pageItems[i].stroked == true){
+		var sWidth = pageItems[i].strokeWidth;
+		var red = pageItems[i].strokeColor.red;
+		var green = pageItems[i].strokeColor.green;
+		var blue = pageItems[i].strokeColor.blue;
+		var opacity = pageItems[i].opacity;
+		if (sWidth == 1){
+		} else {
+			p5Code.push('strokeWeight(' + sWidth + ')');
+		}
+		if(opacity == 100){
+			if (red == green && green == blue && blue == red){
+				if (red == 0 && green == 0 && blue == 0){
+				} else {
+				var gray = red;
+					p5Code.push('stroke('+ gray +');');
+				}
+			} else {
+				p5Code.push('stroke('+ red + comma + green + comma + blue +');');
+			}
+		} else {
+			if (red == green && green == blue && blue == red){
+				if (red == 0 && green == 0 && blue == 0){
+				} else {
+				var gray = red;
+					p5Code.push('stroke('+ gray + comma + opacity +');');
+				}
+			} else {
+				p5Code.push('stroke('+ red + comma + green + comma + blue + comma + opacity +');');
+			}
+		}
+	} else {
+		p5Code.push('noStroke();');
+	}
+	return p5Code;
+}
+
+
+
 function exportBezierVertexShapes(pageItems){
 	var p5Code = [];
 	for (var i=0; i < pageItems.length; i+=1){
 		var anz = 0;
+		hasStroke(pageItems, i, p5Code);
 		isFill(pageItems, i, p5Code);
 		p5Code.push('beginShape();');
 		for (var k=1; k<pageItems[i].pathPoints.length; k+=1){
@@ -125,6 +179,7 @@ function exportBezierVertexShapes(pageItems){
 function exportVertexShapes(pageItems){
 	var p5Code = [];
 	for (var i=0; i < pageItems.length; i+=1) {
+		hasStroke(pageItems, i, p5Code);
 		p5Code.push('beginShape();');
 		for (var ii=0; ii < pageItems[i].pathPoints.length; ii+=1) {
 			var point = pageItems[i].pathPoints[ii];
@@ -142,6 +197,7 @@ function exportEllipses(pageItems){
 		'ellipseMode(CENTER);'
 	];
 	for (var i=0, len=pageItems.length; i < len; i+=1) {
+		hasStroke(pageItems, i, p5Code);
 		isFill(pageItems, i, p5Code);
 		pushMulti(p5Code, createEllipse(pageItems[i]));
 	}
@@ -151,6 +207,7 @@ function exportEllipses(pageItems){
 function exportRects(pageItems){
 	var p5Code = [];
 	for (var i=0, len=pageItems.length; i < len; i+=1) {
+		hasStroke(pageItems, i, p5Code);
 		isFill(pageItems, i, p5Code);
 		pushMulti(p5Code, createRect(pageItems[i]));
 	}
