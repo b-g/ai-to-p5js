@@ -50,10 +50,11 @@ function isFill(pageItems, i, p5Code){
 		var green = pageItems[i].fillColor.green;
 		var blue = pageItems[i].fillColor.blue;
 		if (red == green && green == blue && blue == red){
+			if (red == 255 && green == 255 && blue == 255){			
+			} else {
 			var gray = red;
-			p5Code.push('fill('+ gray +');')
-		} else if (red == 255 && green == 255 && blue == 255){
-			
+				p5Code.push('fill('+ gray +');');
+			}
 		} else {
 			p5Code.push('fill('+ red + comma + green + comma + blue +');');
 		}
