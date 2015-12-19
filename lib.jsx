@@ -1,4 +1,5 @@
 ﻿#target illustrator
+var comma = ', ';
 
 function run(runFunc){
 	if (app.activeDocument) { 
@@ -43,33 +44,51 @@ function endPoint (pageItems, i, k, anz) {
 	};
 }
 
+function isFill(pageItems, i, p5Code){
+	if (pageItems[i].filled == true){
+		var red = pageItems[i].fillColor.red;
+		var green = pageItems[i].fillColor.green;
+		var blue = pageItems[i].fillColor.blue;
+		if (red == green && green == blue && blue == red){
+			var gray = red;
+			p5Code.push('fill('+ gray +');')
+		} else if (red == 255 && green == 255 && blue == 255){
+			
+		} else {
+			p5Code.push('fill('+ red + comma + green + comma + blue +');');
+		}
+	} else {
+		p5Code.push('noFill();');
+	}
+	return p5Code;
+}
+
 function exportBezierVertexShapes(pageItems){
 	var p5Code = [];
 	for (var i=0; i < pageItems.length; i+=1){
 		var anz = 0;
-		p5Code.push('noFill();');
+		isFill(pageItems, i, p5Code);
 		p5Code.push('beginShape();');
 		for (var k=1; k<pageItems[i].pathPoints.length; k+=1){
-			var isClose = pageItems[i].closed;
 			if (k==1){
-				p5Code.push('vertex('+ formatValues(createFirstPoint(pageItems, i, k)).join(',') +');');
+				p5Code.push('vertex('+ formatValues(createFirstPoint(pageItems, i, k)).join(comma) +');');
 				var point = createPoints(pageItems, i, k);
-				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(',') +',' + 
-					formatValues(point.dirLeft).join(',') + ',' + 
-					formatValues(point.xy).join(',') + ');');
+				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(comma) +comma + 
+					formatValues(point.dirLeft).join(comma) + comma + 
+					formatValues(point.xy).join(comma) + ');');
 				anz+=1;
 			} else {
 				var point = createPoints(pageItems, i, k);
-				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(',') +',' + 
-					formatValues(point.dirLeft).join(',') + ',' + 
-					formatValues(point.xy).join(',') + ');');
+				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(comma) +comma + 
+					formatValues(point.dirLeft).join(comma) + comma + 
+					formatValues(point.xy).join(comma) + ');');
 				anz+=1;
 			}
-			if (isClose == true && anz == pageItems[i].pathPoints.length-1){
+			if (pageItems[i].closed == true && anz == pageItems[i].pathPoints.length-1){
 				var point = endPoint(pageItems, i, k, anz);
-				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(',') +',' + 
-				formatValues(point.dirLeft).join(',') + ',' + 
-				formatValues(point.xy).join(',') + ');');	
+				p5Code.push('bezierVertex(' + formatValues(point.dirRight).join(comma) +comma + 
+				formatValues(point.dirLeft).join(comma) + comma + 
+				formatValues(point.xy).join(comma) + ');');	
 			}
 		}
 		p5Code.push('endShape();');
@@ -110,7 +129,7 @@ function exportVertexShapes(pageItems){
 			var point = pageItems[i].pathPoints[ii];
 			var xy = [point.anchor[0], point.anchor[1]*-1];
 			xy = formatValues(xy);
-			p5Code.push('vertex('+ xy.join(',') +');');
+			p5Code.push('vertex('+ xy.join(comma) +');');
 		}
 		p5Code.push('endShape(CLOSE);');
 	}
@@ -122,6 +141,7 @@ function exportEllipses(pageItems){
 		'ellipseMode(CENTER);'
 	];
 	for (var i=0, len=pageItems.length; i < len; i+=1) {
+		isFill(pageItems, i, p5Code);
 		pushMulti(p5Code, createEllipse(pageItems[i]));
 	}
 	return p5Code;
@@ -130,6 +150,7 @@ function exportEllipses(pageItems){
 function exportRects(pageItems){
 	var p5Code = [];
 	for (var i=0, len=pageItems.length; i < len; i+=1) {
+		isFill(pageItems, i, p5Code);
 		pushMulti(p5Code, createRect(pageItems[i]));
 	}
 	return p5Code;
@@ -138,7 +159,7 @@ function exportRects(pageItems){
 function createRect(item){
 	var p5Code = getBounds(item);
 	p5Code = formatValues(p5Code);
-	return 'rect('+ p5Code.join(',') +');';
+	return 'rect('+ p5Code.join(comma) +');';
 }
 
 function createEllipse(item){
@@ -154,7 +175,7 @@ function createEllipse(item){
 		h
 	];
 	p5Code = formatValues(p5Code);
-	return 'ellipse('+ p5Code.join(',') +');';
+	return 'ellipse('+ p5Code.join(comma) +');';
 }
 
 function pushMulti(targetArray, arrayOrValue) {
